@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          barbershop_name: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          plan: string | null
+          updated_at: string
+        }
+        Insert: {
+          barbershop_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          plan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barbershop_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          plan?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
