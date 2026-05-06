@@ -59,6 +59,16 @@ export const AppSidebar = () => {
                   </SidebarMenuItem>
                 );
               })}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/admin"} className="h-10">
+                    <NavLink to="/admin">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span className="font-medium">Admin Master</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
