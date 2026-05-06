@@ -31,6 +31,7 @@ export const AppSidebar = () => {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
