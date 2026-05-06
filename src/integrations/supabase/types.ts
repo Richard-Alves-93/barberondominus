@@ -294,32 +294,41 @@ export type Database = {
       services: {
         Row: {
           active: boolean
+          category: string | null
+          cost: number
           created_at: string
           duration_minutes: number
           id: string
           name: string
           owner_id: string
           price: number
+          profit_margin: number
           updated_at: string
         }
         Insert: {
           active?: boolean
+          category?: string | null
+          cost?: number
           created_at?: string
           duration_minutes?: number
           id?: string
           name: string
           owner_id: string
           price?: number
+          profit_margin?: number
           updated_at?: string
         }
         Update: {
           active?: boolean
+          category?: string | null
+          cost?: number
           created_at?: string
           duration_minutes?: number
           id?: string
           name?: string
           owner_id?: string
           price?: number
+          profit_margin?: number
           updated_at?: string
         }
         Relationships: []
