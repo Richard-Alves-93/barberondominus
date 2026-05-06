@@ -10,6 +10,7 @@ import Auth from "./pages/Auth.tsx";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import { Placeholder } from "./pages/dashboard/Placeholder";
+import Agenda from "./pages/dashboard/Agenda";
 import Admin from "./pages/Admin.tsx";
 import { AdminRoute } from "@/components/AdminRoute";
 import NotFound from "./pages/NotFound.tsx";
