@@ -1,0 +1,4 @@
+ALTER TABLE public.services
+  ADD COLUMN IF NOT EXISTS category text,
+  ADD COLUMN IF NOT EXISTS cost numeric(10,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS profit_margin numeric(6,2) NOT NULL DEFAULT 0;
