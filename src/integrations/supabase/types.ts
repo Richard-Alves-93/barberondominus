@@ -180,6 +180,51 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          active: boolean
+          category: string | null
+          cost: number
+          created_at: string
+          id: string
+          min_stock: number
+          name: string
+          owner_id: string
+          price: number
+          stock: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name: string
+          owner_id: string
+          price?: number
+          stock?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name?: string
+          owner_id?: string
+          price?: number
+          stock?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           barbershop_name: string | null
@@ -291,6 +336,48 @@ export type Database = {
           },
         ]
       }
+      service_products: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          product_id: string
+          quantity: number
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          product_id: string
+          quantity?: number
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          product_id?: string
+          quantity?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_products_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           active: boolean
@@ -303,6 +390,7 @@ export type Database = {
           owner_id: string
           price: number
           profit_margin: number
+          subcategory: string | null
           updated_at: string
         }
         Insert: {
@@ -316,6 +404,7 @@ export type Database = {
           owner_id: string
           price?: number
           profit_margin?: number
+          subcategory?: string | null
           updated_at?: string
         }
         Update: {
@@ -329,9 +418,51 @@ export type Database = {
           owner_id?: string
           price?: number
           profit_margin?: number
+          subcategory?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          movement_type: string
+          owner_id: string
+          product_id: string
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          movement_type: string
+          owner_id: string
+          product_id: string
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          movement_type?: string
+          owner_id?: string
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

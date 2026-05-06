@@ -15,6 +15,8 @@ import Barbeiros from "./pages/dashboard/Barbeiros";
 import Servicos from "./pages/dashboard/Servicos";
 import Clientes from "./pages/dashboard/Clientes";
 import Vendas from "./pages/dashboard/Vendas";
+import Estoque from "./pages/dashboard/Estoque";
+import Relatorios from "./pages/dashboard/Relatorios";
 import Admin from "./pages/Admin.tsx";
 import { AdminRoute } from "@/components/AdminRoute";
 import NotFound from "./pages/NotFound.tsx";
@@ -39,8 +41,8 @@ const App = () => (
               <Route path="servicos" element={<Servicos />} />
               <Route path="vendas" element={<Vendas />} />
               <Route path="caixa" element={<Placeholder title="Caixa" description="Controle de entradas, saídas e fechamento de caixa diário." />} />
-              <Route path="estoque" element={<Placeholder title="Estoque" description="Gestão de produtos, fornecedores e alertas de baixo estoque." />} />
-              <Route path="relatorios" element={<Placeholder title="Relatórios" description="Análises financeiras, operacionais e de desempenho da equipe." />} />
+              <Route path="estoque" element={<Estoque />} />
+              <Route path="relatorios" element={<Relatorios />} />
               <Route path="config" element={<Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." />} />
             </Route>
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
