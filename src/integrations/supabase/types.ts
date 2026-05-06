@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      plans: {
+        Row: {
+          active: boolean
+          adhesion_fee: number
+          billing_type: string
+          created_at: string
+          description: string | null
+          id: string
+          monthly_price: number
+          name: string
+          revenue_percent: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          adhesion_fee?: number
+          billing_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          monthly_price?: number
+          name: string
+          revenue_percent?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          adhesion_fee?: number
+          billing_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          monthly_price?: number
+          name?: string
+          revenue_percent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           barbershop_name: string | null
@@ -21,6 +60,9 @@ export type Database = {
           full_name: string | null
           id: string
           plan: string | null
+          plan_id: string | null
+          status: string
+          suspended_at: string | null
           updated_at: string
         }
         Insert: {
@@ -29,6 +71,9 @@ export type Database = {
           full_name?: string | null
           id: string
           plan?: string | null
+          plan_id?: string | null
+          status?: string
+          suspended_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -37,9 +82,20 @@ export type Database = {
           full_name?: string | null
           id?: string
           plan?: string | null
+          plan_id?: string | null
+          status?: string
+          suspended_at?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
