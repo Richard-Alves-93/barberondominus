@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-type Item = { description: string; qty: number; price: number };
+type Item = { description: string; qty: number; price: number; service_id?: string };
 type Sale = {
   id: string;
   client_id: string | null; barber_id: string | null;
@@ -50,6 +50,43 @@ export default function Vendas() {
   const save = async (form: any) => {
     if (!user) return;
     const total = form.items.reduce((acc: number, i: Item) => acc + Number(i.qty) * Number(i.price), 0);
+
+    // Verificação de estoque (apenas vendas novas com status pago)
+    const isNew = !form.id;
+    if (isNew && form.status === "paid") {
+      const serviceIds = form.items.map((i: Item) => i.service_id).filter(Boolean);
+      if (serviceIds.length) {
+        const [{ data: links }, { data: prods }] = await Promise.all([
+          supabase.from("service_products").select("service_id,product_id,quantity").in("service_id", serviceIds),
+          supabase.from("products").select("id,name,stock,unit"),
+        ]);
+        const need = new Map<string, number>();
+        for (const it of form.items as Item[]) {
+          if (!it.service_id) continue;
+          for (const l of (links ?? []) as any[]) {
+            if (l.service_id === it.service_id) {
+              need.set(l.product_id, (need.get(l.product_id) ?? 0) + Number(l.quantity) * Number(it.qty));
+            }
+          }
+        }
+        const insufficient: string[] = [];
+        for (const [pid, qty] of need) {
+          const p = (prods ?? []).find((x: any) => x.id === pid);
+          if (!p) continue;
+          if (Number(p.stock) < qty) insufficient.push(`${p.name} (precisa ${qty} ${p.unit}, tem ${p.stock})`);
+        }
+        if (insufficient.length) {
+          if (!confirm(`Estoque insuficiente:\n• ${insufficient.join("\n• ")}\n\nRegistrar mesmo assim?`)) return;
+        } else if (need.size) {
+          // baixa de estoque
+          const movs = Array.from(need.entries()).map(([product_id, quantity]) => ({
+            owner_id: user.id, product_id, movement_type: "out", quantity, reason: "Venda",
+          }));
+          await supabase.from("stock_movements").insert(movs);
+        }
+      }
+    }
+
     const payload = {
       owner_id: user.id,
       client_id: form.client_id || null,
@@ -147,7 +184,7 @@ function SaleDialog({ open, data, barbers, clients, services, onClose, onSave }:
   const addServiceAsItem = (id: string) => {
     const s = services.find((x: any) => x.id === id);
     if (!s) return;
-    setForm({ ...form, items: [...form.items, { description: s.name, qty: 1, price: Number(s.price) }] });
+    setForm({ ...form, items: [...form.items, { description: s.name, qty: 1, price: Number(s.price), service_id: s.id }] });
   };
 
   return (
