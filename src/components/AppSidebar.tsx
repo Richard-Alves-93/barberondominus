@@ -1,8 +1,9 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Users, Scissors, ShoppingCart,
-  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut,
+  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield,
 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
@@ -30,6 +31,7 @@ export const AppSidebar = () => {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -57,6 +59,16 @@ export const AppSidebar = () => {
                   </SidebarMenuItem>
                 );
               })}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/admin"} className="h-10">
+                    <NavLink to="/admin">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span className="font-medium">Admin Master</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
