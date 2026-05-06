@@ -224,6 +224,73 @@ export type Database = {
           },
         ]
       }
+      sales: {
+        Row: {
+          appointment_id: string | null
+          barber_id: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          items: Json
+          notes: string | null
+          owner_id: string
+          payment_method: string | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          barber_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          owner_id: string
+          payment_method?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          barber_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          owner_id?: string
+          payment_method?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           active: boolean
