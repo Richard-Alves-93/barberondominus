@@ -350,7 +350,7 @@ const Admin = () => {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir plano?</AlertdialogTitle>
+                                <AlertDialogTitle>Excluir plano?</AlertDialogTitle>
                                 <AlertDialogDescription>Barbearias com este plano ficarão sem plano.</AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
