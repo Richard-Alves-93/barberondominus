@@ -34,10 +34,10 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<DashboardHome />} />
               <Route path="agenda" element={<Agenda />} />
-              <Route path="clientes" element={<Placeholder title="Clientes" description="Cadastro completo dos clientes, histórico de visitas e preferências." />} />
-              <Route path="barbeiros" element={<Placeholder title="Barbeiros" description="Gerencie sua equipe de profissionais, comissões e horários." />} />
-              <Route path="servicos" element={<Placeholder title="Serviços" description="Cadastre cortes, barbas, combos e seus respectivos preços e durações." />} />
-              <Route path="vendas" element={<Placeholder title="Vendas" description="Registre vendas de produtos e serviços com poucos cliques." />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="barbeiros" element={<Barbeiros />} />
+              <Route path="servicos" element={<Servicos />} />
+              <Route path="vendas" element={<Vendas />} />
               <Route path="caixa" element={<Placeholder title="Caixa" description="Controle de entradas, saídas e fechamento de caixa diário." />} />
               <Route path="estoque" element={<Placeholder title="Estoque" description="Gestão de produtos, fornecedores e alertas de baixo estoque." />} />
               <Route path="relatorios" element={<Placeholder title="Relatórios" description="Análises financeiras, operacionais e de desempenho da equipe." />} />
