@@ -10,6 +10,7 @@ import Auth from "./pages/Auth.tsx";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import { Placeholder } from "./pages/dashboard/Placeholder";
+import Agenda from "./pages/dashboard/Agenda";
 import Admin from "./pages/Admin.tsx";
 import { AdminRoute } from "@/components/AdminRoute";
 import NotFound from "./pages/NotFound.tsx";
@@ -28,7 +29,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<DashboardHome />} />
-              <Route path="agenda" element={<Placeholder title="Agenda" description="Visualize e gerencie todos os agendamentos da sua barbearia em um só lugar." />} />
+              <Route path="agenda" element={<Agenda />} />
               <Route path="clientes" element={<Placeholder title="Clientes" description="Cadastro completo dos clientes, histórico de visitas e preferências." />} />
               <Route path="barbeiros" element={<Placeholder title="Barbeiros" description="Gerencie sua equipe de profissionais, comissões e horários." />} />
               <Route path="servicos" element={<Placeholder title="Serviços" description="Cadastre cortes, barbas, combos e seus respectivos preços e durações." />} />
