@@ -37,15 +37,16 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<DashboardHome />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="barbeiros" element={<Barbeiros />} />
-              <Route path="servicos" element={<Servicos />} />
-              <Route path="vendas" element={<Vendas />} />
-              <Route path="caixa" element={<Placeholder title="Caixa" description="Controle de entradas, saídas e fechamento de caixa diário." />} />
-              <Route path="estoque" element={<Estoque />} />
-              <Route path="relatorios" element={<Relatorios />} />
-              <Route path="config" element={<Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." />} />
+              <Route path="agenda" element={<PermissionRoute require="can_agenda"><Agenda /></PermissionRoute>} />
+              <Route path="clientes" element={<PermissionRoute require="can_view_clients"><Clientes /></PermissionRoute>} />
+              <Route path="barbeiros" element={<PermissionRoute ownerOnly><Barbeiros /></PermissionRoute>} />
+              <Route path="servicos" element={<PermissionRoute require="can_view_services"><Servicos /></PermissionRoute>} />
+              <Route path="vendas" element={<PermissionRoute require="can_pdv"><Vendas /></PermissionRoute>} />
+              <Route path="caixa" element={<PermissionRoute ownerOnly><Placeholder title="Caixa" description="Controle de entradas, saídas e fechamento de caixa diário." /></PermissionRoute>} />
+              <Route path="estoque" element={<PermissionRoute require="can_manage_stock"><Estoque /></PermissionRoute>} />
+              <Route path="relatorios" element={<PermissionRoute require="can_view_reports"><Relatorios /></PermissionRoute>} />
+              <Route path="funcionarios" element={<PermissionRoute ownerOnly><Funcionarios /></PermissionRoute>} />
+              <Route path="config" element={<PermissionRoute ownerOnly><Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." /></PermissionRoute>} />
             </Route>
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
