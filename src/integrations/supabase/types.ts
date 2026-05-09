@@ -423,6 +423,60 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_members: {
+        Row: {
+          active: boolean
+          can_agenda: boolean
+          can_cancel_sales: boolean
+          can_manage_stock: boolean
+          can_pdv: boolean
+          can_view_clients: boolean
+          can_view_reports: boolean
+          can_view_services: boolean
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          can_agenda?: boolean
+          can_cancel_sales?: boolean
+          can_manage_stock?: boolean
+          can_pdv?: boolean
+          can_view_clients?: boolean
+          can_view_reports?: boolean
+          can_view_services?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          can_agenda?: boolean
+          can_cancel_sales?: boolean
+          can_manage_stock?: boolean
+          can_pdv?: boolean
+          can_view_clients?: boolean
+          can_view_reports?: boolean
+          can_view_services?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           created_at: string
@@ -490,6 +544,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_owner_for: { Args: { uid: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -497,6 +552,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_member_of: { Args: { oid: string; uid: string }; Returns: boolean }
+      is_owner: { Args: { oid: string; uid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "owner" | "barber"
