@@ -1,9 +1,10 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Users, Scissors, ShoppingCart,
-  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield,
+  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useStaffRole, StaffPermissions } from "@/hooks/useStaffRole";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
@@ -13,17 +14,23 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
-const items = [
+type Item = {
+  title: string; url: string; icon: any;
+  ownerOnly?: boolean; require?: keyof StaffPermissions;
+};
+
+const items: Item[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Agenda", url: "/dashboard/agenda", icon: Calendar },
-  { title: "Clientes", url: "/dashboard/clientes", icon: Users },
-  { title: "Barbeiros", url: "/dashboard/barbeiros", icon: Scissors },
-  { title: "Serviços", url: "/dashboard/servicos", icon: ShoppingBag },
-  { title: "Vendas", url: "/dashboard/vendas", icon: ShoppingCart },
-  { title: "Caixa", url: "/dashboard/caixa", icon: Wallet },
-  { title: "Estoque", url: "/dashboard/estoque", icon: Package },
-  { title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3 },
-  { title: "Configurações", url: "/dashboard/config", icon: Settings },
+  { title: "Agenda", url: "/dashboard/agenda", icon: Calendar, require: "can_agenda" },
+  { title: "Clientes", url: "/dashboard/clientes", icon: Users, require: "can_view_clients" },
+  { title: "Barbeiros", url: "/dashboard/barbeiros", icon: Scissors, ownerOnly: true },
+  { title: "Serviços", url: "/dashboard/servicos", icon: ShoppingBag, require: "can_view_services" },
+  { title: "Vendas", url: "/dashboard/vendas", icon: ShoppingCart, require: "can_pdv" },
+  { title: "Caixa", url: "/dashboard/caixa", icon: Wallet, ownerOnly: true },
+  { title: "Estoque", url: "/dashboard/estoque", icon: Package, require: "can_manage_stock" },
+  { title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3, require: "can_view_reports" },
+  { title: "Funcionários", url: "/dashboard/funcionarios", icon: UserCog, ownerOnly: true },
+  { title: "Configurações", url: "/dashboard/config", icon: Settings, ownerOnly: true },
 ];
 
 export const AppSidebar = () => {
@@ -32,6 +39,14 @@ export const AppSidebar = () => {
   const { pathname } = useLocation();
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { isOwner, permissions, staffName } = useStaffRole();
+
+  const visible = items.filter((i) => {
+    if (isOwner) return true;
+    if (i.ownerOnly) return false;
+    if (i.require) return permissions[i.require];
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -46,7 +61,7 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {items.map((item) => {
+              {visible.map((item) => {
                 const active = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -77,11 +92,11 @@ export const AppSidebar = () => {
         {!collapsed && (
           <div className="flex items-center gap-2 mb-2 px-2 py-2 rounded-lg bg-sidebar-accent">
             <div className="h-8 w-8 rounded-full bg-gradient-hero flex items-center justify-center text-xs font-bold text-primary-foreground">
-              {user?.email?.[0]?.toUpperCase() ?? "U"}
+              {(staffName ?? user?.email)?.[0]?.toUpperCase() ?? "U"}
             </div>
             <div className="text-xs leading-tight overflow-hidden">
-              <p className="font-semibold text-sidebar-foreground truncate">{user?.email}</p>
-              <p className="text-sidebar-foreground/60">Administrador</p>
+              <p className="font-semibold text-sidebar-foreground truncate">{staffName ?? user?.email}</p>
+              <p className="text-sidebar-foreground/60">{isOwner ? "Dono" : "Funcionário"}</p>
             </div>
           </div>
         )}
