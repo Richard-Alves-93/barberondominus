@@ -17,8 +17,10 @@ import Clientes from "./pages/dashboard/Clientes";
 import Vendas from "./pages/dashboard/Vendas";
 import Estoque from "./pages/dashboard/Estoque";
 import Relatorios from "./pages/dashboard/Relatorios";
+import Funcionarios from "./pages/dashboard/Funcionarios";
 import Admin from "./pages/Admin.tsx";
 import { AdminRoute } from "@/components/AdminRoute";
+import { PermissionRoute } from "@/components/PermissionRoute";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
