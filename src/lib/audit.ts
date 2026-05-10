@@ -15,6 +15,6 @@ export async function logActivity(params: {
     action: params.action,
     entity: params.entity ?? null,
     entity_id: params.entity_id ?? null,
-    metadata: params.metadata ?? {},
+    metadata: (params.metadata ?? {}) as never,
   });
 }
