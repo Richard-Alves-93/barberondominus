@@ -60,7 +60,7 @@ export default function AdminTenants() {
   });
 
   const updateStatus = async (p: Profile, status: string) => {
-    const update: Record<string, unknown> = { status };
+    const update: any = { status };
     if (status === "suspended") update.suspended_at = new Date().toISOString();
     if (status === "churned") update.churned_at = new Date().toISOString();
     if (status === "active") { update.suspended_at = null; update.churned_at = null; }
