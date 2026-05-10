@@ -78,6 +78,42 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          entity: string | null
+          entity_id: string | null
+          id: string
+          metadata: Json
+          owner_id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          owner_id: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          owner_id?: string
+        }
+        Relationships: []
+      }
       barbers: {
         Row: {
           active: boolean
@@ -227,7 +263,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adhesion_paid_at: string | null
+          adhesion_status: string
+          asaas_customer_id: string | null
           barbershop_name: string | null
+          churned_at: string | null
           created_at: string
           full_name: string | null
           id: string
@@ -238,7 +278,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          adhesion_paid_at?: string | null
+          adhesion_status?: string
+          asaas_customer_id?: string | null
           barbershop_name?: string | null
+          churned_at?: string | null
           created_at?: string
           full_name?: string | null
           id: string
@@ -249,7 +293,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          adhesion_paid_at?: string | null
+          adhesion_status?: string
+          asaas_customer_id?: string | null
           barbershop_name?: string | null
+          churned_at?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
