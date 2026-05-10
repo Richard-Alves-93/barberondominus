@@ -18,7 +18,14 @@ import Vendas from "./pages/dashboard/Vendas";
 import Estoque from "./pages/dashboard/Estoque";
 import Relatorios from "./pages/dashboard/Relatorios";
 import Funcionarios from "./pages/dashboard/Funcionarios";
-import Admin from "./pages/Admin.tsx";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminOverview from "./pages/admin/Overview";
+import AdminTenants from "./pages/admin/Tenants";
+import AdminPlans from "./pages/admin/Plans";
+import AdminAdesoes from "./pages/admin/Adesoes";
+import AdminFaturamento from "./pages/admin/Faturamento";
+import AdminLogs from "./pages/admin/Logs";
+import AdminAdmins from "./pages/admin/Admins";
 import { AdminRoute } from "@/components/AdminRoute";
 import { PermissionRoute } from "@/components/PermissionRoute";
 import NotFound from "./pages/NotFound.tsx";
@@ -48,7 +55,15 @@ const App = () => (
               <Route path="funcionarios" element={<PermissionRoute ownerOnly><Funcionarios /></PermissionRoute>} />
               <Route path="config" element={<PermissionRoute ownerOnly><Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." /></PermissionRoute>} />
             </Route>
-            <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>
+              <Route index element={<AdminOverview />} />
+              <Route path="tenants" element={<AdminTenants />} />
+              <Route path="planos" element={<AdminPlans />} />
+              <Route path="adesoes" element={<AdminAdesoes />} />
+              <Route path="faturamento" element={<AdminFaturamento />} />
+              <Route path="logs" element={<AdminLogs />} />
+              <Route path="admins" element={<AdminAdmins />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
