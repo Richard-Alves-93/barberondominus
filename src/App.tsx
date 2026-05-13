@@ -18,6 +18,7 @@ import Vendas from "./pages/dashboard/Vendas";
 import Estoque from "./pages/dashboard/Estoque";
 import Relatorios from "./pages/dashboard/Relatorios";
 import Funcionarios from "./pages/dashboard/Funcionarios";
+import Assinatura from "./pages/dashboard/Assinatura";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
 import AdminTenants from "./pages/admin/Tenants";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="estoque" element={<PermissionRoute require="can_manage_stock"><Estoque /></PermissionRoute>} />
               <Route path="relatorios" element={<PermissionRoute require="can_view_reports"><Relatorios /></PermissionRoute>} />
               <Route path="funcionarios" element={<PermissionRoute ownerOnly><Funcionarios /></PermissionRoute>} />
+              <Route path="assinatura" element={<PermissionRoute ownerOnly><Assinatura /></PermissionRoute>} />
               <Route path="config" element={<PermissionRoute ownerOnly><Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." /></PermissionRoute>} />
             </Route>
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>

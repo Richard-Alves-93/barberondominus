@@ -144,6 +144,48 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_logs: {
+        Row: {
+          action: string
+          created_at: string
+          direction: string
+          error: string | null
+          http_status: number | null
+          id: string
+          invoice_id: string | null
+          owner_id: string | null
+          request: Json | null
+          response: Json | null
+          success: boolean
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          direction?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          invoice_id?: string | null
+          owner_id?: string | null
+          request?: Json | null
+          response?: Json | null
+          success?: boolean
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          direction?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          invoice_id?: string | null
+          owner_id?: string | null
+          request?: Json | null
+          response?: Json | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string
@@ -173,6 +215,81 @@ export type Database = {
           notes?: string | null
           owner_id?: string
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          amount: number
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          bank_slip_url: string | null
+          base_revenue: number | null
+          billing_type: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          invoice_url: string | null
+          manual: boolean
+          metadata: Json
+          owner_id: string
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          pix_payload: string | null
+          pix_qr_image: string | null
+          plan_id: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          bank_slip_url?: string | null
+          base_revenue?: number | null
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          manual?: boolean
+          metadata?: Json
+          owner_id: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          pix_payload?: string | null
+          pix_qr_image?: string | null
+          plan_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          bank_slip_url?: string | null
+          base_revenue?: number | null
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          manual?: boolean
+          metadata?: Json
+          owner_id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          pix_payload?: string | null
+          pix_qr_image?: string | null
+          plan_id?: string | null
+          status?: string
+          type?: string
           updated_at?: string
         }
         Relationships: []
@@ -266,11 +383,16 @@ export type Database = {
           adhesion_paid_at: string | null
           adhesion_status: string
           asaas_customer_id: string | null
+          asaas_subscription_id: string | null
           barbershop_name: string | null
+          billing_method: string | null
           churned_at: string | null
           created_at: string
+          current_period_start: string | null
           full_name: string | null
           id: string
+          last_monthly_amount: number | null
+          last_monthly_calc_at: string | null
           plan: string | null
           plan_id: string | null
           status: string
@@ -281,11 +403,16 @@ export type Database = {
           adhesion_paid_at?: string | null
           adhesion_status?: string
           asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           barbershop_name?: string | null
+          billing_method?: string | null
           churned_at?: string | null
           created_at?: string
+          current_period_start?: string | null
           full_name?: string | null
           id: string
+          last_monthly_amount?: number | null
+          last_monthly_calc_at?: string | null
           plan?: string | null
           plan_id?: string | null
           status?: string
@@ -296,11 +423,16 @@ export type Database = {
           adhesion_paid_at?: string | null
           adhesion_status?: string
           asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           barbershop_name?: string | null
+          billing_method?: string | null
           churned_at?: string | null
           created_at?: string
+          current_period_start?: string | null
           full_name?: string | null
           id?: string
+          last_monthly_amount?: number | null
+          last_monthly_calc_at?: string | null
           plan?: string | null
           plan_id?: string | null
           status?: string
