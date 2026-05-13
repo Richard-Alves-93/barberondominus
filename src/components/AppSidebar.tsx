@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Users, Scissors, ShoppingCart,
-  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog,
+  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog, CreditCard,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useStaffRole, StaffPermissions } from "@/hooks/useStaffRole";
@@ -30,6 +30,7 @@ const items: Item[] = [
   { title: "Estoque", url: "/dashboard/estoque", icon: Package, require: "can_manage_stock" },
   { title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3, require: "can_view_reports" },
   { title: "Funcionários", url: "/dashboard/funcionarios", icon: UserCog, ownerOnly: true },
+  { title: "Assinatura", url: "/dashboard/assinatura", icon: CreditCard, ownerOnly: true },
   { title: "Configurações", url: "/dashboard/config", icon: Settings, ownerOnly: true },
 ];
 

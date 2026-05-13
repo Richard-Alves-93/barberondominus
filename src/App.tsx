@@ -18,6 +18,7 @@ import Vendas from "./pages/dashboard/Vendas";
 import Estoque from "./pages/dashboard/Estoque";
 import Relatorios from "./pages/dashboard/Relatorios";
 import Funcionarios from "./pages/dashboard/Funcionarios";
+import Assinatura from "./pages/dashboard/Assinatura";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
 import AdminTenants from "./pages/admin/Tenants";
