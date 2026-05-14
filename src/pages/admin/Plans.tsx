@@ -149,6 +149,11 @@ export default function AdminPlans() {
               <div><Label>% Faturamento</Label><Input type="number" min={0} max={100} step={0.1} value={form.revenue_percent} onChange={e => setForm({ ...form, revenue_percent: Number(e.target.value) })} /></div>
               <div><Label>Adesão (R$)</Label><Input type="number" min={0} step={0.01} value={form.adhesion_fee} onChange={e => setForm({ ...form, adhesion_fee: Number(e.target.value) })} /></div>
             </div>
+            <div className="border-t pt-3 space-y-3">
+              <p className="text-xs text-muted-foreground">Links de cobrança externos (opcional). Quando preenchidos, o sistema usa o link em vez de gerar uma cobrança no Asaas.</p>
+              <div><Label>Link da adesão (ex.: InfinitePay)</Label><Input placeholder="https://..." value={form.adhesion_link ?? ""} onChange={e => setForm({ ...form, adhesion_link: e.target.value })} /></div>
+              <div><Label>Link da mensalidade</Label><Input placeholder="https://..." value={form.monthly_link ?? ""} onChange={e => setForm({ ...form, monthly_link: e.target.value })} /></div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
