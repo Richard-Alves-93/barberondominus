@@ -57,6 +57,8 @@ export default function AdminPlans() {
       monthly_price: Number(form.monthly_price) || 0,
       revenue_percent: Number(form.revenue_percent) || 0,
       adhesion_fee: Number(form.adhesion_fee) || 0,
+      adhesion_link: form.adhesion_link?.trim() || null,
+      monthly_link: form.monthly_link?.trim() || null,
     };
     const res = editing
       ? await supabase.from("plans").update(payload).eq("id", editing.id)
