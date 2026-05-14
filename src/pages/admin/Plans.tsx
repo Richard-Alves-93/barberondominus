@@ -25,10 +25,12 @@ type Plan = {
   id: string; name: string; description: string | null;
   billing_type: "fixed" | "percent"; monthly_price: number;
   revenue_percent: number; adhesion_fee: number; active: boolean;
+  adhesion_link: string | null; monthly_link: string | null;
 };
 const empty: Omit<Plan, "id"> = {
   name: "", description: "", billing_type: "fixed",
   monthly_price: 0, revenue_percent: 0, adhesion_fee: 0, active: true,
+  adhesion_link: "", monthly_link: "",
 };
 
 export default function AdminPlans() {
