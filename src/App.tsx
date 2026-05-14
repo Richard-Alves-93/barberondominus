@@ -27,6 +27,7 @@ import AdminAdesoes from "./pages/admin/Adesoes";
 import AdminFaturamento from "./pages/admin/Faturamento";
 import AdminLogs from "./pages/admin/Logs";
 import AdminAdmins from "./pages/admin/Admins";
+import AdminConfiguracoes from "./pages/admin/Configuracoes";
 import { AdminRoute } from "@/components/AdminRoute";
 import { PermissionRoute } from "@/components/PermissionRoute";
 import NotFound from "./pages/NotFound.tsx";
