@@ -22,6 +22,7 @@ export default function Assinatura() {
   const [profile, setProfile] = useState<any>(null);
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [periodSales, setPeriodSales] = useState<{ total: number; count: number }>({ total: 0, count: 0 });
 
   const load = async () => {
     if (!user) return;
@@ -33,6 +34,12 @@ export default function Assinatura() {
     }
     const { data: inv } = await supabase.from("invoices").select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
     setInvoices(inv ?? []);
+
+    // Extrato do ciclo atual (ou últimos 30d)
+    const since = pr?.current_period_start ?? new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const { data: sales } = await supabase.from("sales").select("total").eq("owner_id", user.id).eq("status", "paid").gte("created_at", since);
+    const total = (sales ?? []).reduce((s: number, r: any) => s + Number(r.total || 0), 0);
+    setPeriodSales({ total, count: sales?.length ?? 0 });
   };
   useEffect(() => { load(); }, [user]);
 
