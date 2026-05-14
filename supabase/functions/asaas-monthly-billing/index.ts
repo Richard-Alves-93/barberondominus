@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   const onlyOwner = body?.owner_id as string | undefined;
 
   let q = admin.from("profiles")
-    .select("id, plan_id, status, adhesion_status, current_period_start, asaas_customer_id, billing_method")
+    .select("id, plan_id, status, adhesion_status, current_period_start, asaas_customer_id, billing_method, billing_mode")
     .eq("adhesion_status", "paid");
   if (onlyOwner) q = q.eq("id", onlyOwner);
   const { data: profiles } = await q;
