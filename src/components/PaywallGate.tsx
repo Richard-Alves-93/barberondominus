@@ -203,6 +203,13 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
         <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Pagar com cartão</a></Button>
       )}
 
+      {invoice.billing_type === "EXTERNAL_LINK" && invoice.invoice_url && (
+        <div className="space-y-2">
+          <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Abrir link de pagamento</a></Button>
+          <p className="text-xs text-muted-foreground text-center">Cobrança gerada via link externo configurado pelo administrador.</p>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={onRefresh}><RefreshCw className="h-4 w-4 mr-2" /> Já paguei</Button>
         <Button variant="ghost" onClick={onChangePlan}>Trocar plano</Button>
