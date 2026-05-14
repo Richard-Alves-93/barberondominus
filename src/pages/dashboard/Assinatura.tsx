@@ -68,10 +68,28 @@ export default function Assinatura() {
           </Card>
           <Card className="p-5">
             <p className="text-xs text-muted-foreground">Próxima cobrança estimada</p>
-            <p className="text-2xl font-bold">{fmt(Number(profile?.last_monthly_amount ?? plan?.monthly_price ?? 0))}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ciclo iniciado em {fmtDate(profile?.current_period_start)}</p>
+            <p className="text-2xl font-bold">{fmt(estimatedNext(profile, plan, periodSales.total))}</p>
+            <p className="text-xs text-muted-foreground mt-1">Modalidade: {profile?.billing_mode === "percent" ? "Percentual" : "Fixa"}</p>
           </Card>
         </div>
+
+        <Card className="p-5 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="font-semibold">Extrato de Faturamento — ciclo atual</h2>
+            <span className="text-xs text-muted-foreground">Iniciado em {fmtDate(profile?.current_period_start)}</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 text-sm">
+            <Stat label="Vendas no período" value={String(periodSales.count)} />
+            <Stat label="Faturamento bruto" value={fmt(periodSales.total)} />
+            <Stat label={profile?.billing_mode === "percent" ? `Cálculo (${Number(plan?.revenue_percent ?? 0)}%)` : "Mensalidade fixa"}
+              value={fmt(estimatedNext(profile, plan, periodSales.total))} highlight />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {profile?.billing_mode === "percent"
+              ? `O valor cobrado é ${Number(plan?.revenue_percent ?? 0)}% sobre o faturamento de ${fmt(periodSales.total)} do ciclo.`
+              : `Modalidade fixa: independente do faturamento, a mensalidade é ${fmt(Number(plan?.monthly_price ?? 0))}.`}
+          </p>
+        </Card>
 
         <Card className="overflow-hidden">
           <div className="p-4 border-b flex items-center justify-between">
