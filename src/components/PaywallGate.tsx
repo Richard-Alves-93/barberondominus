@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 
 type Profile = { id: string; adhesion_status: string; status: string; plan_id: string | null; barbershop_name: string | null };
-type Plan = { id: string; name: string; description: string | null; monthly_price: number; revenue_percent: number; adhesion_fee: number };
+type Plan = { id: string; name: string; description: string | null; monthly_price: number; revenue_percent: number; adhesion_fee: number; adhesion_link: string | null };
 type Invoice = {
   id: string; type: string; amount: number; status: string; billing_type: string | null;
   invoice_url: string | null; bank_slip_url: string | null; pix_payload: string | null; pix_qr_image: string | null;
