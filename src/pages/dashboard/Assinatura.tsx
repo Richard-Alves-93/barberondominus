@@ -169,3 +169,18 @@ export default function Assinatura() {
     </div>
   );
 }
+
+function estimatedNext(profile: any, plan: any, revenue: number) {
+  if (!plan) return 0;
+  if (profile?.billing_mode === "percent") return revenue * (Number(plan.revenue_percent) / 100);
+  return Number(plan.monthly_price);
+}
+
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`text-lg font-bold ${highlight ? "text-amber-500" : ""}`}>{value}</p>
+    </div>
+  );
+}
