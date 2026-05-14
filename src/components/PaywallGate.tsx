@@ -61,10 +61,10 @@ export default function PaywallGate({ children }: { children: React.ReactNode })
   if (!isOwner) return <>{children}</>;
   if (profile?.adhesion_status === "paid") return <>{children}</>;
 
-  const choosePlanAndPay = async (planId: string, billingType: "PIX" | "BOLETO" | "CREDIT_CARD") => {
+  const choosePlanAndPay = async (planId: string, billingType: "PIX" | "BOLETO" | "CREDIT_CARD", billingMode: "fixed" | "percent") => {
     setCreating(planId + billingType);
     const { data, error } = await supabase.functions.invoke("asaas-create-adhesion", {
-      body: { planId, billingType },
+      body: { planId, billingType, billingMode },
     });
     setCreating(null);
     if (error || data?.error) {
