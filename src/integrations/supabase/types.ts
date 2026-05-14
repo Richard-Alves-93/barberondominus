@@ -298,10 +298,12 @@ export type Database = {
         Row: {
           active: boolean
           adhesion_fee: number
+          adhesion_link: string | null
           billing_type: string
           created_at: string
           description: string | null
           id: string
+          monthly_link: string | null
           monthly_price: number
           name: string
           revenue_percent: number
@@ -310,10 +312,12 @@ export type Database = {
         Insert: {
           active?: boolean
           adhesion_fee?: number
+          adhesion_link?: string | null
           billing_type: string
           created_at?: string
           description?: string | null
           id?: string
+          monthly_link?: string | null
           monthly_price?: number
           name: string
           revenue_percent?: number
@@ -322,10 +326,12 @@ export type Database = {
         Update: {
           active?: boolean
           adhesion_fee?: number
+          adhesion_link?: string | null
           billing_type?: string
           created_at?: string
           description?: string | null
           id?: string
+          monthly_link?: string | null
           monthly_price?: number
           name?: string
           revenue_percent?: number
@@ -386,6 +392,7 @@ export type Database = {
           asaas_subscription_id: string | null
           barbershop_name: string | null
           billing_method: string | null
+          billing_mode: string
           churned_at: string | null
           created_at: string
           current_period_start: string | null
@@ -406,6 +413,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           barbershop_name?: string | null
           billing_method?: string | null
+          billing_mode?: string
           churned_at?: string | null
           created_at?: string
           current_period_start?: string | null
@@ -426,6 +434,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           barbershop_name?: string | null
           billing_method?: string | null
+          billing_mode?: string
           churned_at?: string | null
           created_at?: string
           current_period_start?: string | null

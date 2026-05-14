@@ -25,10 +25,12 @@ type Plan = {
   id: string; name: string; description: string | null;
   billing_type: "fixed" | "percent"; monthly_price: number;
   revenue_percent: number; adhesion_fee: number; active: boolean;
+  adhesion_link: string | null; monthly_link: string | null;
 };
 const empty: Omit<Plan, "id"> = {
   name: "", description: "", billing_type: "fixed",
   monthly_price: 0, revenue_percent: 0, adhesion_fee: 0, active: true,
+  adhesion_link: "", monthly_link: "",
 };
 
 export default function AdminPlans() {
@@ -55,6 +57,8 @@ export default function AdminPlans() {
       monthly_price: Number(form.monthly_price) || 0,
       revenue_percent: Number(form.revenue_percent) || 0,
       adhesion_fee: Number(form.adhesion_fee) || 0,
+      adhesion_link: form.adhesion_link?.trim() || null,
+      monthly_link: form.monthly_link?.trim() || null,
     };
     const res = editing
       ? await supabase.from("plans").update(payload).eq("id", editing.id)
@@ -146,6 +150,11 @@ export default function AdminPlans() {
               <div><Label>Mensalidade (R$)</Label><Input type="number" min={0} step={0.01} value={form.monthly_price} onChange={e => setForm({ ...form, monthly_price: Number(e.target.value) })} /></div>
               <div><Label>% Faturamento</Label><Input type="number" min={0} max={100} step={0.1} value={form.revenue_percent} onChange={e => setForm({ ...form, revenue_percent: Number(e.target.value) })} /></div>
               <div><Label>Adesão (R$)</Label><Input type="number" min={0} step={0.01} value={form.adhesion_fee} onChange={e => setForm({ ...form, adhesion_fee: Number(e.target.value) })} /></div>
+            </div>
+            <div className="border-t pt-3 space-y-3">
+              <p className="text-xs text-muted-foreground">Links de cobrança externos (opcional). Quando preenchidos, o sistema usa o link em vez de gerar uma cobrança no Asaas.</p>
+              <div><Label>Link da adesão (ex.: InfinitePay)</Label><Input placeholder="https://..." value={form.adhesion_link ?? ""} onChange={e => setForm({ ...form, adhesion_link: e.target.value })} /></div>
+              <div><Label>Link da mensalidade</Label><Input placeholder="https://..." value={form.monthly_link ?? ""} onChange={e => setForm({ ...form, monthly_link: e.target.value })} /></div>
             </div>
           </div>
           <DialogFooter>

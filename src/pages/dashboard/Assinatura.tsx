@@ -22,6 +22,7 @@ export default function Assinatura() {
   const [profile, setProfile] = useState<any>(null);
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [periodSales, setPeriodSales] = useState<{ total: number; count: number }>({ total: 0, count: 0 });
 
   const load = async () => {
     if (!user) return;
@@ -33,6 +34,12 @@ export default function Assinatura() {
     }
     const { data: inv } = await supabase.from("invoices").select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
     setInvoices(inv ?? []);
+
+    // Extrato do ciclo atual (ou últimos 30d)
+    const since = pr?.current_period_start ?? new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const { data: sales } = await supabase.from("sales").select("total").eq("owner_id", user.id).eq("status", "paid").gte("created_at", since);
+    const total = (sales ?? []).reduce((s: number, r: any) => s + Number(r.total || 0), 0);
+    setPeriodSales({ total, count: sales?.length ?? 0 });
   };
   useEffect(() => { load(); }, [user]);
 
@@ -61,10 +68,28 @@ export default function Assinatura() {
           </Card>
           <Card className="p-5">
             <p className="text-xs text-muted-foreground">Próxima cobrança estimada</p>
-            <p className="text-2xl font-bold">{fmt(Number(profile?.last_monthly_amount ?? plan?.monthly_price ?? 0))}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ciclo iniciado em {fmtDate(profile?.current_period_start)}</p>
+            <p className="text-2xl font-bold">{fmt(estimatedNext(profile, plan, periodSales.total))}</p>
+            <p className="text-xs text-muted-foreground mt-1">Modalidade: {profile?.billing_mode === "percent" ? "Percentual" : "Fixa"}</p>
           </Card>
         </div>
+
+        <Card className="p-5 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="font-semibold">Extrato de Faturamento — ciclo atual</h2>
+            <span className="text-xs text-muted-foreground">Iniciado em {fmtDate(profile?.current_period_start)}</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 text-sm">
+            <Stat label="Vendas no período" value={String(periodSales.count)} />
+            <Stat label="Faturamento bruto" value={fmt(periodSales.total)} />
+            <Stat label={profile?.billing_mode === "percent" ? `Cálculo (${Number(plan?.revenue_percent ?? 0)}%)` : "Mensalidade fixa"}
+              value={fmt(estimatedNext(profile, plan, periodSales.total))} highlight />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {profile?.billing_mode === "percent"
+              ? `O valor cobrado é ${Number(plan?.revenue_percent ?? 0)}% sobre o faturamento de ${fmt(periodSales.total)} do ciclo.`
+              : `Modalidade fixa: independente do faturamento, a mensalidade é ${fmt(Number(plan?.monthly_price ?? 0))}.`}
+          </p>
+        </Card>
 
         <Card className="overflow-hidden">
           <div className="p-4 border-b flex items-center justify-between">
@@ -141,6 +166,21 @@ export default function Assinatura() {
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function estimatedNext(profile: any, plan: any, revenue: number) {
+  if (!plan) return 0;
+  if (profile?.billing_mode === "percent") return revenue * (Number(plan.revenue_percent) / 100);
+  return Number(plan.monthly_price);
+}
+
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`text-lg font-bold ${highlight ? "text-amber-500" : ""}`}>{value}</p>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 
 type Profile = { id: string; adhesion_status: string; status: string; plan_id: string | null; barbershop_name: string | null };
-type Plan = { id: string; name: string; description: string | null; monthly_price: number; revenue_percent: number; adhesion_fee: number };
+type Plan = { id: string; name: string; description: string | null; monthly_price: number; revenue_percent: number; adhesion_fee: number; adhesion_link: string | null };
 type Invoice = {
   id: string; type: string; amount: number; status: string; billing_type: string | null;
   invoice_url: string | null; bank_slip_url: string | null; pix_payload: string | null; pix_qr_image: string | null;
@@ -61,10 +61,10 @@ export default function PaywallGate({ children }: { children: React.ReactNode })
   if (!isOwner) return <>{children}</>;
   if (profile?.adhesion_status === "paid") return <>{children}</>;
 
-  const choosePlanAndPay = async (planId: string, billingType: "PIX" | "BOLETO" | "CREDIT_CARD") => {
+  const choosePlanAndPay = async (planId: string, billingType: "PIX" | "BOLETO" | "CREDIT_CARD", billingMode: "fixed" | "percent") => {
     setCreating(planId + billingType);
     const { data, error } = await supabase.functions.invoke("asaas-create-adhesion", {
-      body: { planId, billingType },
+      body: { planId, billingType, billingMode },
     });
     setCreating(null);
     if (error || data?.error) {
@@ -105,8 +105,10 @@ export default function PaywallGate({ children }: { children: React.ReactNode })
 
 function PlanPicker({
   plans, currentPlanId, creating, onPay,
-}: { plans: Plan[]; currentPlanId: string | null | undefined; creating: string | null; onPay: (id: string, t: any) => void }) {
+}: { plans: Plan[]; currentPlanId: string | null | undefined; creating: string | null; onPay: (id: string, t: any, mode: "fixed" | "percent") => void }) {
   const [selected, setSelected] = useState<string | null>(currentPlanId ?? null);
+  const [mode, setMode] = useState<"fixed" | "percent">("fixed");
+  const selectedPlan = plans.find(p => p.id === selected);
   return (
     <Card className="p-6 space-y-5">
       <h2 className="text-lg font-semibold">Escolha seu plano</h2>
@@ -128,13 +130,32 @@ function PlanPicker({
           );
         })}
       </div>
+
       {selected && (
-        <div className="border-t pt-4">
-          <p className="text-sm font-medium mb-3">Forma de pagamento da adesão</p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <PayBtn icon={<QrCode className="h-4 w-4" />} label="Pix" onClick={() => onPay(selected, "PIX")} loading={creating === selected + "PIX"} />
-            <PayBtn icon={<FileText className="h-4 w-4" />} label="Boleto" onClick={() => onPay(selected, "BOLETO")} loading={creating === selected + "BOLETO"} />
-            <PayBtn icon={<CreditCard className="h-4 w-4" />} label="Cartão" onClick={() => onPay(selected, "CREDIT_CARD")} loading={creating === selected + "CREDIT_CARD"} />
+        <div className="border-t pt-4 space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Modalidade da mensalidade</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button onClick={() => setMode("fixed")} className={`text-left rounded-lg border-2 p-3 transition ${mode === "fixed" ? "border-primary bg-primary/5" : "border-border"}`}>
+                <p className="font-semibold text-sm">Fixa</p>
+                <p className="text-xs text-muted-foreground">Paga {fmt(Number(selectedPlan?.monthly_price ?? 0))} todo mês</p>
+              </button>
+              <button onClick={() => setMode("percent")} className={`text-left rounded-lg border-2 p-3 transition ${mode === "percent" ? "border-primary bg-primary/5" : "border-border"}`}>
+                <p className="font-semibold text-sm">Percentual</p>
+                <p className="text-xs text-muted-foreground">Paga {Number(selectedPlan?.revenue_percent ?? 0)}% sobre o faturamento do mês</p>
+              </button>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Forma de pagamento da adesão</p>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <PayBtn icon={<QrCode className="h-4 w-4" />} label="Pix" onClick={() => onPay(selected, "PIX", mode)} loading={creating === selected + "PIX"} />
+              <PayBtn icon={<FileText className="h-4 w-4" />} label="Boleto" onClick={() => onPay(selected, "BOLETO", mode)} loading={creating === selected + "BOLETO"} />
+              <PayBtn icon={<CreditCard className="h-4 w-4" />} label="Cartão" onClick={() => onPay(selected, "CREDIT_CARD", mode)} loading={creating === selected + "CREDIT_CARD"} />
+            </div>
+            {selectedPlan?.adhesion_link && (
+              <p className="text-xs text-muted-foreground mt-2">Este plano usa link de cobrança externo configurado pelo administrador.</p>
+            )}
           </div>
         </div>
       )}
@@ -180,6 +201,13 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
 
       {invoice.billing_type === "CREDIT_CARD" && invoice.invoice_url && (
         <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Pagar com cartão</a></Button>
+      )}
+
+      {invoice.billing_type === "EXTERNAL_LINK" && invoice.invoice_url && (
+        <div className="space-y-2">
+          <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Abrir link de pagamento</a></Button>
+          <p className="text-xs text-muted-foreground text-center">Cobrança gerada via link externo configurado pelo administrador.</p>
+        </div>
       )}
 
       <div className="flex gap-2">

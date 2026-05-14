@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Package, CreditCard,
-  TrendingUp, ScrollText, Shield, LogOut, Scissors,
+  TrendingUp, ScrollText, Shield, LogOut, Scissors, Settings,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -18,6 +18,7 @@ const items = [
   { title: "Planos", url: "/admin/planos", icon: Package },
   { title: "Adesões", url: "/admin/adesoes", icon: CreditCard },
   { title: "Faturamento", url: "/admin/faturamento", icon: TrendingUp },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
   { title: "Log de Atividades", url: "/admin/logs", icon: ScrollText },
   { title: "Administradores", url: "/admin/admins", icon: Shield },
 ];

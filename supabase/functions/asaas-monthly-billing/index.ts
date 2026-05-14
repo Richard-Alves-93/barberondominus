@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   const onlyOwner = body?.owner_id as string | undefined;
 
   let q = admin.from("profiles")
-    .select("id, plan_id, status, adhesion_status, current_period_start, asaas_customer_id, billing_method")
+    .select("id, plan_id, status, adhesion_status, current_period_start, asaas_customer_id, billing_method, billing_mode")
     .eq("adhesion_status", "paid");
   if (onlyOwner) q = q.eq("id", onlyOwner);
   const { data: profiles } = await q;
@@ -37,10 +37,27 @@ Deno.serve(async (req) => {
     const revenue = (sales ?? []).reduce((s, r: any) => s + Number(r.total || 0), 0);
     const fixed = Number(plan.monthly_price);
     const pct = revenue * (Number(plan.revenue_percent) / 100);
-    const amount = Math.max(fixed, pct);
+    const mode = (p as any).billing_mode === "percent" ? "percent" : "fixed";
+    const amount = mode === "percent" ? pct : fixed;
 
     const due = new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString().slice(0, 10);
     const billingType = "CREDIT_CARD"; // mensalidade obrigatoriamente em cartão
+
+    // Se houver link manual configurado para o plano, usá-lo (não chama Asaas)
+    if (plan.monthly_link) {
+      const { data: invoice } = await admin.from("invoices").insert({
+        owner_id: p.id, plan_id: p.plan_id, type: "monthly",
+        amount, base_revenue: revenue, due_date: due, status: "pending",
+        billing_type: "EXTERNAL_LINK", invoice_url: plan.monthly_link, manual: true,
+        period_start: periodStart.toISOString(), period_end: periodEnd.toISOString(),
+        metadata: { source: "external_link", mode },
+      }).select().single();
+      await admin.from("profiles").update({
+        last_monthly_amount: amount, last_monthly_calc_at: new Date().toISOString(),
+      }).eq("id", p.id);
+      results.push({ owner: p.id, invoice_id: invoice?.id, amount, revenue, external: true });
+      continue;
+    }
 
     const charge = await asaasFetch("/payments", {
       method: "POST",
@@ -49,7 +66,7 @@ Deno.serve(async (req) => {
         billingType,
         value: Number(amount.toFixed(2)),
         dueDate: due,
-        description: `Mensalidade Barber On — ${plan.name}`,
+        description: `Mensalidade Barber On — ${plan.name} (${mode === "percent" ? `${plan.revenue_percent}% s/ ${revenue.toFixed(2)}` : "fixa"})`,
         externalReference: `monthly:${p.id}:${periodEnd.toISOString().slice(0,10)}`,
       }),
       logCtx: { owner_id: p.id, action: "create_monthly_payment" },
@@ -70,7 +87,7 @@ Deno.serve(async (req) => {
       invoice_url: charge.data.invoiceUrl,
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),
-      metadata: charge.data,
+      metadata: { ...charge.data, mode },
     }).select().single();
 
     await admin.from("profiles").update({

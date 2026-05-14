@@ -25,8 +25,26 @@ Deno.serve(async (req) => {
 
     const targetPlanId = planId ?? profile.plan_id;
     if (!targetPlanId) return json({ error: "plan required" }, 400);
+    const billingMode = ["fixed", "percent"].includes(body.billingMode) ? body.billingMode : (profile.billing_mode ?? "fixed");
     const { data: plan } = await admin.from("plans").select("*").eq("id", targetPlanId).single();
     if (!plan) return json({ error: "plan not found" }, 404);
+
+    // Se houver link manual configurado pelo Master, priorizá-lo
+    if (plan.adhesion_link) {
+      await admin.from("profiles").update({
+        plan_id: targetPlanId, billing_mode: billingMode, billing_method: billingType, adhesion_status: "pending", status: "pending",
+      }).eq("id", user.id);
+      const { data: invoice } = await admin.from("invoices").insert({
+        owner_id: user.id, plan_id: targetPlanId, type: "adhesion",
+        amount: Number(plan.adhesion_fee), status: "pending", billing_type: "EXTERNAL_LINK",
+        invoice_url: plan.adhesion_link, manual: true, metadata: { source: "external_link" },
+      }).select().single();
+      await admin.from("billing_logs").insert({
+        owner_id: user.id, invoice_id: invoice?.id, action: "external_link_used", success: true,
+        response: { url: plan.adhesion_link },
+      });
+      return json({ ok: true, invoice, external: true });
+    }
 
     // 1) Customer
     let customerId = profile.asaas_customer_id;
@@ -42,9 +60,9 @@ Deno.serve(async (req) => {
       } as any);
       if (!cust.ok) return json({ error: "asaas_customer_failed", details: cust.data }, 502);
       customerId = cust.data.id;
-      await admin.from("profiles").update({ asaas_customer_id: customerId, plan_id: targetPlanId, billing_method: billingType }).eq("id", user.id);
+      await admin.from("profiles").update({ asaas_customer_id: customerId, plan_id: targetPlanId, billing_method: billingType, billing_mode: billingMode }).eq("id", user.id);
     } else {
-      await admin.from("profiles").update({ plan_id: targetPlanId, billing_method: billingType }).eq("id", user.id);
+      await admin.from("profiles").update({ plan_id: targetPlanId, billing_method: billingType, billing_mode: billingMode }).eq("id", user.id);
     }
 
     // 2) Cobrança avulsa
