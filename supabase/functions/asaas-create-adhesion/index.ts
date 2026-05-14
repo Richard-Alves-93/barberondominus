@@ -60,9 +60,9 @@ Deno.serve(async (req) => {
       } as any);
       if (!cust.ok) return json({ error: "asaas_customer_failed", details: cust.data }, 502);
       customerId = cust.data.id;
-      await admin.from("profiles").update({ asaas_customer_id: customerId, plan_id: targetPlanId, billing_method: billingType }).eq("id", user.id);
+      await admin.from("profiles").update({ asaas_customer_id: customerId, plan_id: targetPlanId, billing_method: billingType, billing_mode: billingMode }).eq("id", user.id);
     } else {
-      await admin.from("profiles").update({ plan_id: targetPlanId, billing_method: billingType }).eq("id", user.id);
+      await admin.from("profiles").update({ plan_id: targetPlanId, billing_method: billingType, billing_mode: billingMode }).eq("id", user.id);
     }
 
     // 2) Cobrança avulsa
