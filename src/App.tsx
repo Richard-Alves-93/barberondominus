@@ -77,6 +77,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </BarberProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
