@@ -206,7 +206,12 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
       toast.success("Comprovante enviado para validação!");
       onRefresh();
     } catch (err: any) {
-      toast.error("Erro ao enviar: " + err.message);
+      console.error("Upload error:", err);
+      if (err.message?.includes("bucket_not_found") || err.message?.includes("Bucket not found")) {
+        toast.error("Erro de configuração no servidor. Por favor, contate o suporte.");
+      } else {
+        toast.error("Erro ao enviar: " + err.message);
+      }
     } finally {
       setUploading(false);
     }
