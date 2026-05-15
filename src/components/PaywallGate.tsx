@@ -5,9 +5,10 @@ import { useStaffRole } from "@/hooks/useStaffRole";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Lock, QrCode, FileText, CreditCard, CheckCircle2, Copy, RefreshCw, Upload, Image as ImageIcon } from "lucide-react";
+import { Loader2, Lock, QrCode, FileText, CreditCard, CheckCircle2, Copy, RefreshCw, Upload, Image as ImageIcon, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 type Profile = { id: string; adhesion_status: string; status: string; plan_id: string | null; barbershop_name: string | null };
 type Plan = { id: string; name: string; description: string | null; monthly_price: number; revenue_percent: number; adhesion_fee: number; adhesion_link: string | null };
@@ -178,6 +179,7 @@ function PayBtn({ icon, label, onClick, loading }: any) {
 
 function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice; onRefresh: () => void; onChangePlan: () => void }) {
   const { user } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const copy = (s: string) => { navigator.clipboard.writeText(s); toast.success("Copiado"); };
@@ -217,7 +219,6 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
           <p className="text-xs text-muted-foreground">Adesão pendente</p>
           <p className="text-3xl font-bold">{fmt(Number(invoice.amount))}</p>
         </div>
-        <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">{invoice.billing_type}</Badge>
       </div>
 
       {!showUpload ? (
@@ -242,6 +243,13 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
             <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Pagar com cartão</a></Button>
           )}
 
+          {invoice.billing_type === "EXTERNAL_LINK" && invoice.invoice_url && (
+            <div className="space-y-3">
+              <Button asChild className="w-full h-12 text-base font-semibold"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Abrir link de pagamento</a></Button>
+              <p className="text-xs text-muted-foreground text-center">Cobrança gerada via link externo configurado pelo administrador.</p>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => setShowUpload(true)}><RefreshCw className="h-4 w-4 mr-2" /> Já paguei</Button>
             <Button variant="ghost" onClick={onChangePlan}>Trocar plano</Button>
@@ -259,13 +267,11 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
               <p className="text-xs text-muted-foreground mt-1">Imagens ou PDF. Conferência manual em até 24h.</p>
             </div>
             <div className="pt-2">
-              <label className="cursor-pointer">
-                <Button variant="outline" size="sm" className="pointer-events-none" disabled={uploading}>
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
-                  Selecionar arquivo
-                </Button>
-                <input type="file" className="hidden" accept="image/*,application/pdf" onChange={onUpload} disabled={uploading} />
-              </label>
+              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                Selecionar arquivo
+              </Button>
+              <input type="file" ref={fileRef} className="hidden" accept="image/*,application/pdf" onChange={onUpload} disabled={uploading} />
             </div>
           </div>
           <Button variant="ghost" className="w-full text-xs" onClick={() => setShowUpload(false)}>Voltar para pagamento</Button>
