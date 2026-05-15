@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Users, Scissors, ShoppingCart,
-  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog, CreditCard,
+  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog, CreditCard, DollarSign,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useStaffRole, StaffPermissions } from "@/hooks/useStaffRole";
+import { useBarber } from "@/contexts/BarberContext";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
@@ -19,21 +20,6 @@ type Item = {
   ownerOnly?: boolean; require?: keyof StaffPermissions;
 };
 
-const items: Item[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Agenda", url: "/dashboard/agenda", icon: Calendar, require: "can_agenda" },
-  { title: "Clientes", url: "/dashboard/clientes", icon: Users, require: "can_view_clients" },
-  { title: "Barbeiros", url: "/dashboard/barbeiros", icon: Scissors, ownerOnly: true },
-  { title: "Serviços", url: "/dashboard/servicos", icon: ShoppingBag, require: "can_view_services" },
-  { title: "Vendas", url: "/dashboard/vendas", icon: ShoppingCart, require: "can_pdv" },
-  { title: "Caixa", url: "/dashboard/caixa", icon: Wallet, ownerOnly: true },
-  { title: "Estoque", url: "/dashboard/estoque", icon: Package, require: "can_manage_stock" },
-  { title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3, require: "can_view_reports" },
-  { title: "Funcionários", url: "/dashboard/funcionarios", icon: UserCog, ownerOnly: true },
-  { title: "Assinatura", url: "/dashboard/assinatura", icon: CreditCard, ownerOnly: true },
-  { title: "Configurações", url: "/dashboard/config", icon: Settings, ownerOnly: true },
-];
-
 export const AppSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -41,6 +27,32 @@ export const AppSidebar = () => {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { isOwner, permissions, staffName } = useStaffRole();
+  const { isBarber } = useBarber();
+
+  // Items base
+  const baseItems: Item[] = [
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Agenda", url: "/dashboard/agenda", icon: Calendar, require: "can_agenda" },
+    { title: "Clientes", url: "/dashboard/clientes", icon: Users, require: "can_view_clients" },
+    { title: "Barbeiros", url: "/dashboard/barbeiros", icon: Scissors, ownerOnly: true },
+    { title: "Serviços", url: "/dashboard/servicos", icon: ShoppingBag, require: "can_view_services" },
+    { title: "Vendas", url: "/dashboard/vendas", icon: ShoppingCart, require: "can_pdv" },
+    { title: "Caixa", url: "/dashboard/caixa", icon: Wallet, ownerOnly: true },
+    { title: "Estoque", url: "/dashboard/estoque", icon: Package, require: "can_manage_stock" },
+    { title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3, require: "can_view_reports" },
+    { title: "Funcionários", url: "/dashboard/funcionarios", icon: UserCog, ownerOnly: true },
+    { title: "Assinatura", url: "/dashboard/assinatura", icon: CreditCard, ownerOnly: true },
+  ];
+
+  // Adicionar items de comissões condicionalmente
+  const items = [
+    ...baseItems,
+    // Para barbeiros: mostrar "Minhas Comissões"
+    ...(isBarber ? [{ title: "Minhas Comissões", url: "/dashboard/comissoes", icon: DollarSign }] : []),
+    // Para donos: mostrar "Gerenciar Comissões"
+    ...(isOwner ? [{ title: "Gerenciar Comissões", url: "/dashboard/comissoes-manager", icon: DollarSign, ownerOnly: true }] : []),
+    { title: "Configurações", url: "/dashboard/config", icon: Settings, ownerOnly: true },
+  ];
 
   const visible = items.filter((i) => {
     if (isOwner) return true;
