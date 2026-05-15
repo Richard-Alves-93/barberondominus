@@ -36,6 +36,7 @@ type Profile = {
   billing_mode?: string | null;
   adhesion_date?: string | null;
   qtd_barbeiros: number;
+  outros_funcionarios: number;
   total_usuarios: number;
 };
 type Plan = { 
@@ -79,16 +80,21 @@ export default function AdminTenants() {
       supabase.from("employees").select("owner_id, position"),
     ]);
 
-    const counts: Record<string, { barbers: number; total: number }> = {};
+    const counts: Record<string, { barbers: number; others: number; total: number }> = {};
     (emp.data ?? []).forEach(e => {
-      if (!counts[e.owner_id]) counts[e.owner_id] = { barbers: 0, total: 0 };
+      if (!counts[e.owner_id]) counts[e.owner_id] = { barbers: 0, others: 0, total: 0 };
       counts[e.owner_id].total++;
-      if (e.position === 'barbeiro') counts[e.owner_id].barbers++;
+      if (e.position === 'barbeiro') {
+        counts[e.owner_id].barbers++;
+      } else {
+        counts[e.owner_id].others++;
+      }
     });
 
     setProfiles((p.data ?? []).map(profile => ({
       ...profile,
       qtd_barbeiros: counts[profile.id]?.barbers ?? 0,
+      outros_funcionarios: counts[profile.id]?.others ?? 0,
       total_usuarios: counts[profile.id]?.total ?? 0
     })) as Profile[]);
 
@@ -180,10 +186,11 @@ export default function AdminTenants() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
-              <tr className="text-left">
+               <tr className="text-left">
                 <th className="p-3 font-medium">Barbearia</th>
                 <th className="p-3 font-medium">Plano</th>
                 <th className="p-3 font-medium text-center">Qtd. Barbeiros</th>
+                <th className="p-3 font-medium text-center">Outros Funcionários</th>
                 <th className="p-3 font-medium text-center">Total Usuários</th>
                 <th className="p-3 font-medium text-center">Status</th>
                 <th className="p-3 font-medium text-center">Adesão</th>
@@ -192,8 +199,8 @@ export default function AdminTenants() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={9} className="p-12 text-center text-muted-foreground">Carregando…</td></tr>}
-              {!loading && filtered.length === 0 && <tr><td colSpan={9} className="p-12 text-center text-muted-foreground">Nenhuma barbearia encontrada.</td></tr>}
+              {loading && <tr><td colSpan={10} className="p-12 text-center text-muted-foreground">Carregando…</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan={10} className="p-12 text-center text-muted-foreground">Nenhuma barbearia encontrada.</td></tr>}
               {filtered.map(p => {
                 const st = STATUS_LABEL[p.status] ?? STATUS_LABEL.pending;
                 const ad = ADHESION_LABEL[p.adhesion_status] ?? ADHESION_LABEL.pending;
@@ -211,12 +218,13 @@ export default function AdminTenants() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-3 text-center">
+                     <td className="p-3 text-center">
                       <span className={limitExceeded ? "text-red-500 font-bold" : ""}>
                         {p.qtd_barbeiros}
                       </span>
                       {plan && <span className="text-xs text-muted-foreground ml-1">/ {plan.barber_limit}</span>}
                     </td>
+                    <td className="p-3 text-center">{p.outros_funcionarios}</td>
                     <td className="p-3 text-center">{p.total_usuarios}</td>
                     <td className="p-3 text-center"><Badge variant="outline" className={st.cls}>{st.label}</Badge></td>
                     <td className="p-3 text-center"><Badge variant="outline" className={ad.cls}>{ad.label}</Badge></td>
