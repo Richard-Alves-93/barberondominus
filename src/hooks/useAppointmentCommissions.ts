@@ -98,7 +98,7 @@ export const useDetailedCommissions = (
   startDate: Date,
   endDate: Date
 ) => {
-  return queryBuilder()
+  return supabase
     .from("commissions_generated")
     .select("*")
     .eq("barber_id", barberId)
