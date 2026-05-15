@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BarberProvider } from "@/contexts/BarberContext";
+import { EmployeeProvider } from "@/contexts/EmployeeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -18,10 +19,11 @@ import Clientes from "./pages/dashboard/Clientes";
 import Vendas from "./pages/dashboard/Vendas";
 import Estoque from "./pages/dashboard/Estoque";
 import Relatorios from "./pages/dashboard/Relatorios";
-import Funcionarios from "./pages/dashboard/Funcionarios";
 import Assinatura from "./pages/dashboard/Assinatura";
 import BarberCommissions from "./pages/dashboard/BarberCommissions";
 import CommissionManagement from "./pages/dashboard/CommissionManagement";
+import Employees from "./pages/dashboard/Employees";
+import Payroll from "./pages/dashboard/Payroll";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
 import AdminTenants from "./pages/admin/Tenants";
@@ -45,7 +47,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <BarberProvider>
-            <Routes>
+            <EmployeeProvider>
+              <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -58,11 +61,11 @@ const App = () => (
               <Route path="caixa" element={<PermissionRoute ownerOnly><Placeholder title="Caixa" description="Controle de entradas, saídas e fechamento de caixa diário." /></PermissionRoute>} />
               <Route path="estoque" element={<PermissionRoute require="can_manage_stock"><Estoque /></PermissionRoute>} />
               <Route path="relatorios" element={<PermissionRoute require="can_view_reports"><Relatorios /></PermissionRoute>} />
-              <Route path="funcionarios" element={<PermissionRoute ownerOnly><Funcionarios /></PermissionRoute>} />
               <Route path="assinatura" element={<PermissionRoute ownerOnly><Assinatura /></PermissionRoute>} />
               <Route path="config" element={<PermissionRoute ownerOnly><Placeholder title="Configurações" description="Preferências da sua barbearia, horários de funcionamento e integrações." /></PermissionRoute>} />
               <Route path="comissoes" element={<BarberCommissions />} />
               <Route path="comissoes-manager" element={<PermissionRoute ownerOnly><CommissionManagement /></PermissionRoute>} />
+              <Route path="folha-pagamento" element={<PermissionRoute ownerOnly><Payroll /></PermissionRoute>} />
             </Route>
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>
               <Route index element={<AdminOverview />} />
@@ -75,8 +78,7 @@ const App = () => (
               <Route path="admins" element={<AdminAdmins />} />
             </Route>
             <Route path="*" element={<NotFound />} />
-          </Routes>
-          </BarberProvider>
+          </Routes>            </EmployeeProvider>          </BarberProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

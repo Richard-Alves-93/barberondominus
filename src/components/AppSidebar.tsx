@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Users, Scissors, ShoppingCart,
-  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog, CreditCard, DollarSign,
+  Wallet, Package, ShoppingBag, BarChart3, Settings, LogOut, Shield, UserCog, CreditCard, DollarSign, Users2,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useStaffRole, StaffPermissions } from "@/hooks/useStaffRole";
