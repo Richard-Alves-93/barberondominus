@@ -14,18 +14,53 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/components/ui/tabs";
 import { MoreHorizontal, Eye, Power, LogIn, Search } from "lucide-react";
 import { toast } from "sonner";
 import { fmtBRL, STATUS_LABEL, ADHESION_LABEL } from "./lib";
 import { logActivity } from "@/lib/audit";
 
 type Profile = {
-  id: string; full_name: string | null; barbershop_name: string | null;
-  plan_id: string | null; status: string; adhesion_status: string;
-  adhesion_paid_at: string | null; asaas_customer_id: string | null;
+  id: string; 
+  full_name: string | null; 
+  barbershop_name: string | null;
+  plan_id: string | null; 
+  status: string; 
+  adhesion_status: string;
+  adhesion_paid_at: string | null; 
+  asaas_customer_id: string | null;
+  created_at: string;
+  cnpj?: string | null;
+  billing_mode?: string | null;
+  adhesion_date?: string | null;
+  qtd_barbeiros: number;
+  total_usuarios: number;
+};
+type Plan = { 
+  id: string; 
+  name: string; 
+  monthly_price: number; 
+  adhesion_fee: number;
+  barber_limit: number;
+};
+
+type Employee = {
+  id: string;
+  name: string;
+  position: string;
+  service_commission_percent: number;
+  active: boolean;
+};
+
+type Invoice = {
+  id: string;
+  type: string;
+  amount: number;
+  status: string;
   created_at: string;
 };
-type Plan = { id: string; name: string; monthly_price: number; adhesion_fee: number };
 
 export default function AdminTenants() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -38,11 +73,25 @@ export default function AdminTenants() {
 
   const load = async () => {
     setLoading(true);
-    const [p, pl] = await Promise.all([
+    const [p, pl, emp] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("plans").select("id,name,monthly_price,adhesion_fee"),
+      supabase.from("plans").select("*"),
+      supabase.from("employees").select("owner_id, position"),
     ]);
-    setProfiles((p.data ?? []) as Profile[]);
+
+    const counts: Record<string, { barbers: number; total: number }> = {};
+    (emp.data ?? []).forEach(e => {
+      if (!counts[e.owner_id]) counts[e.owner_id] = { barbers: 0, total: 0 };
+      counts[e.owner_id].total++;
+      if (e.position === 'barbeiro') counts[e.owner_id].barbers++;
+    });
+
+    setProfiles((p.data ?? []).map(profile => ({
+      ...profile,
+      qtd_barbeiros: counts[profile.id]?.barbers ?? 0,
+      total_usuarios: counts[profile.id]?.total ?? 0
+    })) as Profile[]);
+
     setPlans((pl.data ?? []) as Plan[]);
     setLoading(false);
   };
@@ -133,24 +182,26 @@ export default function AdminTenants() {
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-3 font-medium">Barbearia</th>
-                <th className="p-3 font-medium">Responsável</th>
                 <th className="p-3 font-medium">Plano</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium">Adesão</th>
+                <th className="p-3 font-medium text-center">Qtd. Barbeiros</th>
+                <th className="p-3 font-medium text-center">Total Usuários</th>
+                <th className="p-3 font-medium text-center">Status</th>
+                <th className="p-3 font-medium text-center">Adesão</th>
                 <th className="p-3 font-medium">Cadastro</th>
                 <th className="p-3 font-medium text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">Carregando…</td></tr>}
-              {!loading && filtered.length === 0 && <tr><td colSpan={7} className="p-12 text-center text-muted-foreground">Nenhuma barbearia encontrada.</td></tr>}
+              {loading && <tr><td colSpan={9} className="p-12 text-center text-muted-foreground">Carregando…</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan={9} className="p-12 text-center text-muted-foreground">Nenhuma barbearia encontrada.</td></tr>}
               {filtered.map(p => {
                 const st = STATUS_LABEL[p.status] ?? STATUS_LABEL.pending;
                 const ad = ADHESION_LABEL[p.adhesion_status] ?? ADHESION_LABEL.pending;
+                const plan = p.plan_id ? planMap[p.plan_id] : null;
+                const limitExceeded = plan && p.qtd_barbeiros > (plan.barber_limit || 999);
                 return (
                   <tr key={p.id} className="border-t hover:bg-muted/20">
                     <td className="p-3 font-medium">{p.barbershop_name ?? "—"}</td>
-                    <td className="p-3 text-muted-foreground">{p.full_name ?? "—"}</td>
                     <td className="p-3">
                       <Select value={p.plan_id ?? "none"} onValueChange={(v) => setPlan(p, v === "none" ? null : v)}>
                         <SelectTrigger className="h-8 w-[170px]"><SelectValue /></SelectTrigger>
@@ -160,9 +211,16 @@ export default function AdminTenants() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-3"><Badge variant="outline" className={st.cls}>{st.label}</Badge></td>
-                    <td className="p-3"><Badge variant="outline" className={ad.cls}>{ad.label}</Badge></td>
-                    <td className="p-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="p-3 text-center">
+                      <span className={limitExceeded ? "text-red-500 font-bold" : ""}>
+                        {p.qtd_barbeiros}
+                      </span>
+                      {plan && <span className="text-xs text-muted-foreground ml-1">/ {plan.barber_limit}</span>}
+                    </td>
+                    <td className="p-3 text-center">{p.total_usuarios}</td>
+                    <td className="p-3 text-center"><Badge variant="outline" className={st.cls}>{st.label}</Badge></td>
+                    <td className="p-3 text-center"><Badge variant="outline" className={ad.cls}>{ad.label}</Badge></td>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -188,29 +246,143 @@ export default function AdminTenants() {
       </Card>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{detail?.barbershop_name ?? "Detalhes"}</DialogTitle></DialogHeader>
-          {detail && (
-            <div className="space-y-2 text-sm">
-              <Row k="ID" v={detail.id} />
-              <Row k="Responsável" v={detail.full_name ?? "—"} />
-              <Row k="Status" v={STATUS_LABEL[detail.status]?.label ?? detail.status} />
-              <Row k="Adesão" v={ADHESION_LABEL[detail.adhesion_status]?.label ?? detail.adhesion_status} />
-              <Row k="Adesão paga em" v={detail.adhesion_paid_at ? new Date(detail.adhesion_paid_at).toLocaleString("pt-BR") : "—"} />
-              <Row k="Plano" v={detail.plan_id ? planMap[detail.plan_id]?.name ?? "?" : "Sem plano"} />
-              {detail.plan_id && planMap[detail.plan_id] && (
-                <>
-                  <Row k="Mensalidade" v={fmtBRL(Number(planMap[detail.plan_id].monthly_price))} />
-                  <Row k="Adesão" v={fmtBRL(Number(planMap[detail.plan_id].adhesion_fee))} />
-                </>
-              )}
-              <Row k="Asaas customer" v={detail.asaas_customer_id ?? "—"} />
-              <Row k="Cadastro" v={new Date(detail.created_at).toLocaleString("pt-BR")} />
-            </div>
-          )}
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{detail?.barbershop_name ?? "Detalhes da Barbearia"}</DialogTitle>
+          </DialogHeader>
+          {detail && <DetailContent profile={detail} plan={detail.plan_id ? planMap[detail.plan_id] : null} />}
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function DetailContent({ profile, plan }: { profile: Profile; plan: Plan | null }) {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      setLoading(true);
+      const [emp, inv] = await Promise.all([
+        supabase.from("employees").select("id, name, position, service_commission_percent, active").eq("owner_id", profile.id).order("name"),
+        supabase.from("invoices").select("id, type, amount, status, created_at").eq("owner_id", profile.id).order("created_at", { ascending: false }),
+      ]);
+      setEmployees((emp.data ?? []) as Employee[]);
+      setInvoices((inv.data ?? []) as Invoice[]);
+      setLoading(false);
+    };
+    fetchDetails();
+  }, [profile.id]);
+
+  return (
+    <Tabs defaultValue="empresa" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="empresa">Dados da Empresa</TabsTrigger>
+        <TabsTrigger value="equipe">Equipe ({employees.length})</TabsTrigger>
+        <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="empresa" className="space-y-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Row k="Nome Fantasia" v={profile.barbershop_name ?? "—"} />
+            <Row k="Responsável" v={profile.full_name ?? "—"} />
+            <Row k="CNPJ/CPF" v={profile.cnpj ?? "—"} />
+            <Row k="Data de Adesão" v={profile.adhesion_date ? new Date(profile.adhesion_date).toLocaleDateString("pt-BR") : "—"} />
+          </div>
+          <div className="space-y-2">
+            <Row k="Plano" v={plan?.name ?? "Sem plano"} />
+            <Row k="Modalidade" v={profile.billing_mode === "percent" ? "Percentual" : "Fixo"} />
+            <Row k="Status" v={STATUS_LABEL[profile.status]?.label ?? profile.status} />
+            <Row k="Asaas ID" v={profile.asaas_customer_id ?? "—"} />
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="equipe" className="py-4">
+        {loading ? (
+          <p className="text-center py-8 text-muted-foreground">Carregando equipe...</p>
+        ) : (
+          <div className="border rounded-md">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr className="text-left">
+                  <th className="p-2 font-medium">Nome</th>
+                  <th className="p-2 font-medium">Cargo</th>
+                  <th className="p-2 font-medium text-right">Comissão %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map(e => (
+                  <tr key={e.id} className="border-t">
+                    <td className="p-2">{e.name}</td>
+                    <td className="p-2">
+                      <Badge variant="outline" className={
+                        e.position === 'gerente' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                        e.position === 'barbeiro' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                        'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                      }>
+                        {e.position.charAt(0).toUpperCase() + e.position.slice(1)}
+                      </Badge>
+                    </td>
+                    <td className="p-2 text-right">
+                      {e.position === 'barbeiro' ? `${e.service_commission_percent}%` : "—"}
+                    </td>
+                  </tr>
+                ))}
+                {employees.length === 0 && (
+                  <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">Nenhum colaborador cadastrado</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="financeiro" className="py-4">
+        {loading ? (
+          <p className="text-center py-8 text-muted-foreground">Carregando financeiro...</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="border rounded-md">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr className="text-left">
+                    <th className="p-2 font-medium">Data</th>
+                    <th className="p-2 font-medium">Tipo</th>
+                    <th className="p-2 font-medium">Valor</th>
+                    <th className="p-2 font-medium text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map(i => (
+                    <tr key={i.id} className="border-t">
+                      <td className="p-2">{new Date(i.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-2">{i.type === 'adhesion' ? 'Adesão' : 'Mensalidade'}</td>
+                      <td className="p-2">{fmtBRL(i.amount)}</td>
+                      <td className="p-2 text-right">
+                        <Badge variant="outline" className={
+                          i.status === 'paid' ? 'bg-emerald-500/10 text-emerald-600' :
+                          i.status === 'overdue' ? 'bg-red-500/10 text-red-600' :
+                          'bg-amber-500/10 text-amber-600'
+                        }>
+                          {i.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                  {invoices.length === 0 && (
+                    <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Nenhuma fatura encontrada</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
   );
 }
 
