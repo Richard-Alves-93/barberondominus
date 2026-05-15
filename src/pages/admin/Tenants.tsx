@@ -17,7 +17,7 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
-import { MoreHorizontal, Eye, Power, LogIn, Search } from "lucide-react";
+import { MoreHorizontal, Eye, Power, LogIn, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtBRL, STATUS_LABEL, ADHESION_LABEL } from "./lib";
 import { logActivity } from "@/lib/audit";
@@ -234,6 +234,14 @@ export default function AdminTenants() {
                           {p.status !== "overdue" && <DropdownMenuItem onClick={() => updateStatus(p, "overdue")}>Marcar inadimplente</DropdownMenuItem>}
                           {p.status !== "suspended" && <DropdownMenuItem className="text-destructive" onClick={() => updateStatus(p, "suspended")}><Power className="h-4 w-4 mr-2" /> Suspender acesso</DropdownMenuItem>}
                           {p.status !== "churned" && <DropdownMenuItem className="text-destructive" onClick={() => updateStatus(p, "churned")}>Cancelar (churn)</DropdownMenuItem>}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive" onClick={() => {
+                            if(confirm("Tem a certeza? Esta ação desativará a barbearia instantaneamente.")) {
+                              updateStatus(p, "suspended");
+                            }
+                          }}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Desativar Unidade
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -312,6 +320,7 @@ function DetailContent({ profile, plan }: { profile: Profile; plan: Plan | null 
                   <th className="p-2 font-medium">Nome</th>
                   <th className="p-2 font-medium">Cargo</th>
                   <th className="p-2 font-medium text-right">Comissão %</th>
+                  <th className="p-2 font-medium text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -329,6 +338,17 @@ function DetailContent({ profile, plan }: { profile: Profile; plan: Plan | null 
                     </td>
                     <td className="p-2 text-right">
                       {e.position === 'barbeiro' ? `${e.service_commission_percent}%` : "—"}
+                    </td>
+                    <td className="p-2 text-right">
+                      <Button variant="ghost" size="icon" onClick={async () => {
+                        if(confirm(`Remover ${e.name}?`)) {
+                          await supabase.from("employees").update({ active: false }).eq("id", e.id);
+                          toast.success("Funcionário removido");
+                          setEmployees(prev => prev.filter(emp => emp.id !== e.id));
+                        }
+                      }}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </td>
                   </tr>
                 ))}

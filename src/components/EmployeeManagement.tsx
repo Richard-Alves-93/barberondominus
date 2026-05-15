@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCreateEmployee, useEmployeesList } from "@/hooks/useEmployees";
+import { useCreateEmployee, useEmployeesList, useUpdateEmployee, useDeactivateEmployee } from "@/hooks/useEmployees";
 import {
   Card,
   CardContent,
@@ -21,6 +21,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -30,6 +41,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "sonner";
 
 const POSITION_LABELS = {
   admin: "Admin (Dono)",
@@ -47,7 +59,19 @@ const SALARY_TYPE_LABELS = {
 export const EmployeeManagement = () => {
   const { user } = useAuth();
   const { data: employees = [], isLoading } = useEmployeesList(user?.id || "");
+  const deactivateEmployee = useDeactivateEmployee();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+
+  const handleDelete = async (employee: any) => {
+    if (!user?.id) return;
+    if (confirm("Tem a certeza? Esta ação não pode ser desfeita e removerá o histórico de acesso deste utilizador")) {
+      await deactivateEmployee.mutateAsync({
+        employeeId: employee.id,
+        ownerId: user.id
+      });
+    }
+  };
 
   if (isLoading) {
     return <div>Carregando funcionários...</div>;
@@ -119,10 +143,24 @@ export const EmployeeManagement = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedEmployee(employee)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Editar Funcionário</DialogTitle>
+                          <DialogDescription>Atualize os dados de {employee.name}</DialogDescription>
+                        </DialogHeader>
+                        <CreateEmployeeForm 
+                          initialData={employee}
+                          onSuccess={() => setIsDialogOpen(false)} 
+                        />
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -138,23 +176,25 @@ export const EmployeeManagement = () => {
 
 interface CreateEmployeeFormProps {
   onSuccess?: () => void;
+  initialData?: any;
 }
 
-const CreateEmployeeForm = ({ onSuccess }: CreateEmployeeFormProps) => {
+const CreateEmployeeForm = ({ onSuccess, initialData }: CreateEmployeeFormProps) => {
   const { user } = useAuth();
   const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee();
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    position: "atendente" as const,
-    salaryType: "fixed" as const,
-    baseSalary: 0,
-    commissionEnabled: false,
-    serviceCommissionPercent: 0,
-    productCommissionPercent: 0,
-    hireDate: new Date().toISOString().split("T")[0],
+    name: initialData?.name || "",
+    email: initialData?.email || "",
+    phone: initialData?.phone || "",
+    position: (initialData?.position || "atendente") as EmployeePosition,
+    salaryType: (initialData?.salary_type || "fixed") as "fixed" | "commission" | "hybrid",
+    baseSalary: initialData?.base_salary || 0,
+    commissionEnabled: initialData?.commission_enabled || false,
+    serviceCommissionPercent: initialData?.service_commission_percent || 0,
+    productCommissionPercent: initialData?.product_commission_percent || 0,
+    hireDate: initialData?.hire_date || new Date().toISOString().split("T")[0],
   });
 
   const isBarber = formData.position === "barbeiro";
@@ -168,37 +208,36 @@ const CreateEmployeeForm = ({ onSuccess }: CreateEmployeeFormProps) => {
       return;
     }
 
-    await createEmployee.mutateAsync({
-      ownerId: user.id,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone || undefined,
-      position: formData.position,
-      salaryType: formData.salaryType,
-      baseSalary: formData.baseSalary,
-      commissionEnabled: showCommissionFields ? formData.commissionEnabled : false,
-      serviceCommissionPercent: showCommissionFields
-        ? formData.serviceCommissionPercent
-        : 0,
-      productCommissionPercent: showCommissionFields
-        ? formData.productCommissionPercent
-        : 0,
-      hireDate: formData.hireDate,
-    });
-
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      position: "atendente",
-      salaryType: "fixed",
-      baseSalary: 0,
-      commissionEnabled: false,
-      serviceCommissionPercent: 0,
-      productCommissionPercent: 0,
-      hireDate: new Date().toISOString().split("T")[0],
-    });
+    if (initialData?.id) {
+      await updateEmployee.mutateAsync({
+        employeeId: initialData.id,
+        ownerId: user.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        position: formData.position,
+        salary_type: formData.salaryType,
+        base_salary: formData.baseSalary,
+        commission_enabled: showCommissionFields ? formData.commissionEnabled : false,
+        service_commission_percent: showCommissionFields ? formData.serviceCommissionPercent : 0,
+        product_commission_percent: showCommissionFields ? formData.productCommissionPercent : 0,
+        hire_date: formData.hireDate,
+      });
+    } else {
+      await createEmployee.mutateAsync({
+        ownerId: user.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        position: formData.position,
+        salaryType: formData.salaryType,
+        baseSalary: formData.baseSalary,
+        commissionEnabled: showCommissionFields ? formData.commissionEnabled : false,
+        serviceCommissionPercent: showCommissionFields ? formData.serviceCommissionPercent : 0,
+        productCommissionPercent: showCommissionFields ? formData.productCommissionPercent : 0,
+        hireDate: formData.hireDate,
+      });
+    }
 
     onSuccess?.();
   };
