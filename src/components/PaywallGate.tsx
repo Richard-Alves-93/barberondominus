@@ -5,7 +5,7 @@ import { useStaffRole } from "@/hooks/useStaffRole";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Lock, QrCode, FileText, CreditCard, CheckCircle2, Copy, RefreshCw } from "lucide-react";
+import { Loader2, Lock, QrCode, FileText, CreditCard, CheckCircle2, Copy, RefreshCw, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -27,19 +27,22 @@ export default function PaywallGate({ children }: { children: React.ReactNode })
   const [profile, setProfile] = useState<Profile | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [receipt, setReceipt] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
 
   const load = async () => {
     if (!user) return;
-    const [pr, pl, inv] = await Promise.all([
+    const [pr, pl, inv, rc] = await Promise.all([
       supabase.from("profiles").select("id,adhesion_status,status,plan_id,barbershop_name").eq("id", user.id).single(),
       supabase.from("plans").select("*").eq("active", true).order("monthly_price"),
       supabase.from("invoices").select("*").eq("type", "adhesion").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("adhesion_receipts").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
     setProfile(pr.data as any);
     setPlans((pl.data ?? []) as any);
     setInvoice((inv.data ?? null) as any);
+    setReceipt(rc.data ?? null);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user]);
@@ -89,7 +92,9 @@ export default function PaywallGate({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {invoice && invoice.status === "pending" ? (
+        {receipt ? (
+          <StatusCard receipt={receipt} onRefresh={load} />
+        ) : invoice && invoice.status === "pending" ? (
           <PendingInvoice invoice={invoice} onRefresh={load} onChangePlan={() => setInvoice(null)} />
         ) : (
           <PlanPicker plans={plans} currentPlanId={profile?.plan_id} creating={creating} onPay={choosePlanAndPay} />
@@ -172,7 +177,39 @@ function PayBtn({ icon, label, onClick, loading }: any) {
 }
 
 function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice; onRefresh: () => void; onChangePlan: () => void }) {
+  const { user } = useAuth();
+  const [showUpload, setShowUpload] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const copy = (s: string) => { navigator.clipboard.writeText(s); toast.success("Copiado"); };
+
+  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upError } = await supabase.storage.from("adhesion-receipts").upload(path, file);
+      if (upError) throw upError;
+
+      const { error: dbError } = await supabase.from("adhesion_receipts").insert({
+        owner_id: user.id,
+        invoice_id: invoice.id,
+        file_path: path,
+        status: "pending"
+      });
+      if (dbError) throw dbError;
+
+      toast.success("Comprovante enviado para validação!");
+      onRefresh();
+    } catch (err: any) {
+      toast.error("Erro ao enviar: " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Card className="p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -183,39 +220,87 @@ function PendingInvoice({ invoice, onRefresh, onChangePlan }: { invoice: Invoice
         <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">{invoice.billing_type}</Badge>
       </div>
 
-      {invoice.billing_type === "PIX" && invoice.pix_qr_image && (
-        <div className="space-y-3">
-          <img src={invoice.pix_qr_image} alt="QR Pix" className="h-56 w-56 mx-auto rounded-lg border" />
-          {invoice.pix_payload && (
-            <div className="flex gap-2">
-              <input readOnly value={invoice.pix_payload} className="flex-1 text-xs px-3 py-2 rounded-md border bg-muted font-mono" />
-              <Button variant="outline" size="sm" onClick={() => copy(invoice.pix_payload!)}><Copy className="h-4 w-4" /></Button>
+      {!showUpload ? (
+        <>
+          {invoice.billing_type === "PIX" && invoice.pix_qr_image && (
+            <div className="space-y-3">
+              <img src={invoice.pix_qr_image} alt="QR Pix" className="h-56 w-56 mx-auto rounded-lg border" />
+              {invoice.pix_payload && (
+                <div className="flex gap-2">
+                  <input readOnly value={invoice.pix_payload} className="flex-1 text-xs px-3 py-2 rounded-md border bg-muted font-mono" />
+                  <Button variant="outline" size="sm" onClick={() => copy(invoice.pix_payload!)}><Copy className="h-4 w-4" /></Button>
+                </div>
+              )}
             </div>
           )}
+
+          {invoice.billing_type === "BOLETO" && invoice.bank_slip_url && (
+            <Button asChild className="w-full"><a href={invoice.bank_slip_url} target="_blank" rel="noreferrer">Abrir boleto</a></Button>
+          )}
+
+          {invoice.billing_type === "CREDIT_CARD" && invoice.invoice_url && (
+            <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Pagar com cartão</a></Button>
+          )}
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowUpload(true)}><RefreshCw className="h-4 w-4 mr-2" /> Já paguei</Button>
+            <Button variant="ghost" onClick={onChangePlan}>Trocar plano</Button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">A liberação é automática assim que o Asaas confirmar o pagamento.</p>
+        </>
+      ) : (
+        <div className="space-y-4 pt-2">
+          <div className="border-2 border-dashed rounded-xl p-8 text-center space-y-3 bg-muted/20">
+            <div className="p-3 bg-primary/10 rounded-full w-fit mx-auto">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Anexar Comprovante</p>
+              <p className="text-xs text-muted-foreground mt-1">Imagens ou PDF. Conferência manual em até 24h.</p>
+            </div>
+            <div className="pt-2">
+              <label className="cursor-pointer">
+                <Button variant="outline" size="sm" className="pointer-events-none" disabled={uploading}>
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                  Selecionar arquivo
+                </Button>
+                <input type="file" className="hidden" accept="image/*,application/pdf" onChange={onUpload} disabled={uploading} />
+              </label>
+            </div>
+          </div>
+          <Button variant="ghost" className="w-full text-xs" onClick={() => setShowUpload(false)}>Voltar para pagamento</Button>
         </div>
       )}
+    </Card>
+  );
+}
 
-      {invoice.billing_type === "BOLETO" && invoice.bank_slip_url && (
-        <Button asChild className="w-full"><a href={invoice.bank_slip_url} target="_blank" rel="noreferrer">Abrir boleto</a></Button>
-      )}
+function StatusCard({ receipt, onRefresh }: { receipt: any, onRefresh: () => void }) {
+  const isPending = receipt.status === "pending";
+  const isRejected = receipt.status === "rejected";
 
-      {invoice.billing_type === "CREDIT_CARD" && invoice.invoice_url && (
-        <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Pagar com cartão</a></Button>
-      )}
-
-      {invoice.billing_type === "EXTERNAL_LINK" && invoice.invoice_url && (
-        <div className="space-y-2">
-          <Button asChild className="w-full"><a href={invoice.invoice_url} target="_blank" rel="noreferrer">Abrir link de pagamento</a></Button>
-          <p className="text-xs text-muted-foreground text-center">Cobrança gerada via link externo configurado pelo administrador.</p>
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onRefresh}><RefreshCw className="h-4 w-4 mr-2" /> Já paguei</Button>
-        <Button variant="ghost" onClick={onChangePlan}>Trocar plano</Button>
+  return (
+    <Card className="p-8 text-center space-y-4">
+      <div className={`p-4 rounded-full w-fit mx-auto ${isPending ? "bg-amber-500/15" : "bg-red-500/15"}`}>
+        {isPending ? <Clock className="h-8 w-8 text-amber-600" /> : <Lock className="h-8 w-8 text-red-600" />}
       </div>
-
-      <p className="text-xs text-muted-foreground text-center">A liberação é automática assim que o Asaas confirmar o pagamento.</p>
+      <div className="space-y-2">
+        <h2 className="text-xl font-bold">
+          {isPending ? "Aguardando conferência" : "Comprovante Recusado"}
+        </h2>
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+          {isPending 
+            ? "Já recebemos seu comprovante. Um administrador irá validar o pagamento em breve para liberar seu acesso." 
+            : `Não foi possível validar seu pagamento: ${receipt.rejection_reason || "Verifique o arquivo enviado."}`}
+        </p>
+      </div>
+      <div className="pt-4 flex gap-2 justify-center">
+        <Button variant="outline" size="sm" onClick={onRefresh}><RefreshCw className="h-4 w-4 mr-2" /> Atualizar status</Button>
+        {isRejected && <Button size="sm" onClick={async () => {
+          await supabase.from("adhesion_receipts").delete().eq("id", receipt.id);
+          onRefresh();
+        }}>Tentar novamente</Button>}
+      </div>
     </Card>
   );
 }
