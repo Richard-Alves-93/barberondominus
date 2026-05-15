@@ -34,11 +34,12 @@ export const CommissionReportByPeriod = () => {
     barbers[0]?.id || ""
   );
 
-  const { data: commissionData } = useCommissionsByPeriod(
+  const { data: commissionDataRaw } = useCommissionsByPeriod(
     selectedBarberId,
     new Date(startDate),
     new Date(endDate)
   );
+  const commissionData = commissionDataRaw as any;
 
   const totalGross = commissionData?.total_gross || 0;
   const totalCommission = commissionData?.total_commission || 0;

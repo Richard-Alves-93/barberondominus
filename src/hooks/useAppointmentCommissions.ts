@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+const supabase = supabaseClient as any;
 import { useToast } from "@/hooks/use-toast";
 
 export const useCreateCommissionFromAppointment = () => {
@@ -97,7 +98,7 @@ export const useDetailedCommissions = (
   startDate: Date,
   endDate: Date
 ) => {
-  return queryBuilder()
+  return supabase
     .from("commissions_generated")
     .select("*")
     .eq("barber_id", barberId)
