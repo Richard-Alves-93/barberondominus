@@ -11,6 +11,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { title: "Visão Geral", url: "/admin", icon: LayoutDashboard, end: true },
@@ -28,6 +30,24 @@ export const AdminSidebar = () => {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { signOut, user } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("adhesion_receipts")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      setPendingCount(count ?? 0);
+    };
+    fetchCount();
+
+    const sub = supabase.channel("pending-receipts-sidebar")
+      .on("postgres_changes", { event: "*", schema: "public", table: "adhesion_receipts" }, fetchCount)
+      .subscribe();
+    
+    return () => { supabase.removeChannel(sub); };
+  }, []);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -55,7 +75,16 @@ export const AdminSidebar = () => {
                     <SidebarMenuButton asChild isActive={active} className="h-10">
                       <NavLink to={item.url} end={item.end}>
                         <item.icon className="h-4 w-4" />
-                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                        {!collapsed && (
+                          <div className="flex-1 flex items-center justify-between">
+                            <span className="font-medium">{item.title}</span>
+                            {(item.title === "Adesões" || item.title === "Administradores") && pendingCount > 0 && (
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse">
+                                {pendingCount}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
